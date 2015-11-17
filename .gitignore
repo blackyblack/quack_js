@@ -1,0 +1,27 @@
+#java specific
+*.class
+*.jar
+*.rar
+*.zip
+*.1
+.classpath
+.project
+*.log
+*.lck
+*.log.*
+*.lck.*
+
+#netbeans ignore personal stuff 
+nbproject/private/
+bin/
+builds/
+lib/
+.settings/
+
+## generic files to ignore
+*~
+*.lock
+*.DS_Store
+*.swp
+*.out
+*.sublime-workspace
