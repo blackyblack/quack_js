@@ -1,1 +1,4 @@
-- GUI
+- Add asset field and quantity to Create Quack
+- Add expected asset and quantity to Create Quack
+- Generate account from secret with NRS or Jay
+- Move to plugins when Create Quack is finished

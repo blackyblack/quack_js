@@ -1,3 +1,37 @@
+///HACK: add lock attribute to modals to make them wait for response
+// save the original function object
+var _superModal = $.fn.modal;
+
+// add locked as a new option
+$.extend(_superModal.Constructor.DEFAULTS, {
+  locked: false
+});
+
+// capture the original hide
+var _hide = _superModal.Constructor.prototype.hide;
+
+// add the lock, unlock and override the hide of modal
+$.extend(_superModal.Constructor.prototype, {
+  // locks the dialog so that it cannot be hidden
+  lock: function() {
+    this.options.locked = true;
+    this.$element.addClass("locked");
+  }
+  // unlocks the dialog so that it can be hidden by 'esc' or clicking on the backdrop (if not static)
+  ,
+  unlock: function() {
+    this.options.locked = false;
+    this.$element.removeClass("locked");
+  },
+  // override the original hide so that the original is only called if the modal is unlocked
+  hide: function() {
+    if (this.options.locked) {
+      return;
+    }
+    _hide.apply(this, arguments);
+  }
+});
+
 function quackCreate() {
   var senderRS = "NXT-YTBB-LT9J-SRRR-7KLBQ";
   var recipientRS = "NXT-GAHZ-GQNW-ANZS-6A4WW";
