@@ -46,36 +46,87 @@
             <div class="callout callout-danger error_message" style="display:none"></div>
 
             <!-- recipient field -->
-            <label for="quackCreateRecipient" data-i18n="recipient">RECIPIENT</label>
-            <input type="text" class="form-control" name="recipient" id="quackCreateRecipient" placeholder="Recipient Account" data-i18n="[placeholder]recipient_account" autofocus tabindex="1" />
-
-            <!-- asset type dropdown -->
             <div class="form-group">
-              <label for="quackCreateAssetType" data-i18n="asset_type">Asset Type</label>
-              <select class="form-control" name="quackCreateAssetTypeName" id="quackCreateAssetType">
-                <option value="NXT" data-i18n="nxt">NXT</option>
-                <option value="A" data-i18n="asset">Asset</option>
-                <option value="M" data-i18n="currency">Currency</option>
-              </select>
+              <label for="quackCreateRecipient" data-i18n="recipient">RECIPIENT</label>
+              <input type="text" class="form-control" name="recipient" id="quackCreateRecipient" placeholder="Recipient Account" data-i18n="[placeholder]recipient_account" autofocus tabindex="1" />
             </div>
 
-            <!-- asset field -->
-            <div class="form-group" id="quackCreateAssetGroup" style="display:none">
-              <label for="quackCreateAsset" data-i18n="assetid">ASSET ID</label>
-              <input type="text" class="form-control" name="asset" id="quackCreateAsset" placeholder="Asset ID" data-i18n="[placeholder]asset" tabindex="1" />
-            </div>
+            <!-- swap group -->
+            <div class="row">
+              <!-- Send Part -->
+              <div class="col-xs-6 col-sm-6 col-md-6">
+                <div class="box box-primary">
+                  <div class="box-header"><h3 class="box-title" data-i18n="send">Send</h3></div>
+                  <div class="box-body no-padding">
+                    <!-- asset type dropdown -->
+                    <div class="form-group">
+                      <label for="quackCreateAssetType" data-i18n="asset_type">ASSET TYPE</label>
+                      <select class="form-control" name="quackCreateAssetTypeName" id="quackCreateAssetType">
+                        <option value="NXT" data-i18n="nxt">NXT</option>
+                        <option value="A" data-i18n="asset">Asset</option>
+                        <option value="M" data-i18n="currency">Currency</option>
+                      </select>
+                    </div>
 
-            <!-- currency field -->
-            <div class="form-group" id="quackCreateCurrencyGroup" style="display:none">
-              <label for="quackCreateCurrency" id="currencyid" data-i18n="uri">CURRENCY ID</label>
-              <input type="text" class="form-control" name="currency" id="quackCreateCurrency" placeholder="Currency" data-i18n="[placeholder]currency" tabindex="2" />
-            </div>
+                    <!-- asset field -->
+                    <div class="form-group" id="quackCreateAssetGroup" style="display:none">
+                      <label for="quackCreateAsset" data-i18n="assetid">ASSET ID</label>
+                      <input type="text" class="form-control" name="asset" id="quackCreateAsset" placeholder="Asset ID" data-i18n="[placeholder]asset" tabindex="1" />
+                    </div>
 
-            <!-- quantity field -->
-            <div class="form-group">
-              <label for="quackCreateQuantity" data-i18n="quantity">QUANTITY</label>
-              <div class="input-group">
-                <input type="number" name="quantity" id="quackCreateQuantity" class="form-control" step="any" min="0" placeholder="Quantity" data-i18n="[placeholder]quantity" tabindex="3">
+                    <!-- currency field -->
+                    <div class="form-group" id="quackCreateCurrencyGroup" style="display:none">
+                      <label for="quackCreateCurrency" id="currencyid" data-i18n="uri">CURRENCY ID</label>
+                      <input type="text" class="form-control" name="currency" id="quackCreateCurrency" placeholder="Currency" data-i18n="[placeholder]currency" tabindex="2" />
+                    </div>
+
+                    <!-- quantity field -->
+                    <div class="form-group">
+                       <label for="quackCreateQuantity" data-i18n="quantity">QUANTITY</label>
+                      <div class="input-group">
+                        <input type="number" name="quantity" id="quackCreateQuantity" class="form-control" step="any" min="0" placeholder="Quantity" data-i18n="[placeholder]quantity" tabindex="3">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Receive Part -->
+              <div class="col-xs-6 col-sm-6 col-md-6">
+                <div class="box box-primary">
+                  <div class="box-header"><h3 class="box-title" data-i18n="send">Receive</h3></div>
+                  <div class="box-body no-padding">
+                    <!-- asset type dropdown -->
+                    <div class="form-group">
+                      <label for="quackCreateAssetType" data-i18n="asset_type">ASSET TYPE</label>
+                      <select class="form-control" name="quackCreateExpectAssetTypeName" id="quackCreateExpectAssetType">
+                        <option value="NXT" data-i18n="nxt">NXT</option>
+                        <option value="A" data-i18n="asset">Asset</option>
+                        <option value="M" data-i18n="currency">Currency</option>
+                      </select>
+                    </div>
+
+                    <!-- asset field -->
+                    <div class="form-group" id="quackCreateExpectAssetGroup" style="display:none">
+                      <label for="quackCreateExpectAsset" data-i18n="assetid">ASSET ID</label>
+                      <input type="text" class="form-control" name="asset" id="quackCreateExpectAsset" placeholder="Asset ID" data-i18n="[placeholder]asset" tabindex="1" />
+                    </div>
+
+                    <!-- currency field -->
+                    <div class="form-group" id="quackCreateExpectCurrencyGroup" style="display:none">
+                      <label for="quackCreateExpectCurrency" id="currencyid" data-i18n="uri">CURRENCY ID</label>
+                      <input type="text" class="form-control" name="currency" id="quackCreateExpectCurrency" placeholder="Currency" data-i18n="[placeholder]currency" tabindex="2" />
+                    </div>
+
+                    <!-- quantity field -->
+                    <div class="form-group">
+                      <label for="quackCreateExpectQuantity" data-i18n="quantity">QUANTITY</label>
+                      <div class="input-group">
+                        <input type="number" name="quantity" id="quackCreateExpectQuantity" class="form-control" step="any" min="0" placeholder="Quantity" data-i18n="[placeholder]quantity" tabindex="3">
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -108,6 +159,32 @@
   <script src="js/app.js"></script>
 
   <script>
+    $("#quackCreateModal").on("show.bs.modal", function () {
+      var type = $("#quackCreateAssetType").val();
+      if(type == "NXT") {
+        $("#quackCreateAssetGroup").hide();
+        $("#quackCreateCurrencyGroup").hide();
+      } else if (type == "A") {
+        $("#quackCreateAssetGroup").show();
+        $("#quackCreateCurrencyGroup").hide();
+      } else if (type == "M") {
+        $("#quackCreateAssetGroup").hide();
+        $("#quackCreateCurrencyGroup").show();
+      }
+
+      type = $("#quackCreateExpectAssetType").val();
+      if(type == "NXT") {
+        $("#quackCreateExpectAssetGroup").hide();
+        $("#quackCreateExpectCurrencyGroup").hide();
+      } else if (type == "A") {
+        $("#quackCreateExpectAssetGroup").show();
+        $("#quackCreateExpectCurrencyGroup").hide();
+      } else if (type == "M") {
+        $("#quackCreateExpectAssetGroup").hide();
+        $("#quackCreateExpectCurrencyGroup").show();
+      }
+    });
+
     $("#quackCreateAssetType").on("change", function () {
         var type = $(this).val();
         if(type == "NXT") {
@@ -119,6 +196,20 @@
         } else if (type == "M") {
           $("#quackCreateAssetGroup").hide();
           $("#quackCreateCurrencyGroup").show();
+        }
+    });
+
+    $("#quackCreateExpectAssetType").on("change", function () {
+        var type = $(this).val();
+        if(type == "NXT") {
+          $("#quackCreateExpectAssetGroup").hide();
+          $("#quackCreateExpectCurrencyGroup").hide();
+        } else if (type == "A") {
+          $("#quackCreateExpectAssetGroup").show();
+          $("#quackCreateExpectCurrencyGroup").hide();
+        } else if (type == "M") {
+          $("#quackCreateExpectAssetGroup").hide();
+          $("#quackCreateExpectCurrencyGroup").show();
         }
     });
 
@@ -135,6 +226,10 @@
       var assetId = modal.find("#quackCreateAsset").val();
       var assetQNT = modal.find("#quackCreateQuantity").val();
 
+      var assetExpectType = modal.find("#quackCreateExpectAssetType").val();
+      var assetExpectId = modal.find("#quackCreateExpectAsset").val();
+      var assetExpectQNT = modal.find("#quackCreateExpectQuantity").val();
+
       if(!recipientRS) {
         submitFailed(modal, "Recipient not set");
         return;
@@ -147,13 +242,24 @@
 
       if(assetType == "NXT") assetId = "1";
       else {
-        submitFailed(modal, "Asset ID not set");
-        return;
+        if(!assetId) {
+          submitFailed(modal, "Asset ID not set");
+          return;
+        }
       }
 
       if(!assetQNT || assetQNT <= 0) {
         submitFailed(modal, "Quantity not set");
         return;
+      }
+
+      if(assetExpectType == "NXT") assetExpectId = "1";
+
+      if(assetExpectQNT && assetExpectQNT > 0) {
+        if(assetExpectType != "NXT" && !assetExpectId) {
+          submitFailed(modal, "Receive Asset ID not set");
+          return;
+        }
       }
 
       assets.push({
@@ -162,11 +268,13 @@
         "type":assetType
       });
       
-      expectedAssets.push({
-        "id":"1",
-        "QNT":5,
-        "type":"NXT"
-      });
+      if(assetExpectQNT) {
+        expectedAssets.push({
+          "id":assetExpectId,
+          "QNT":assetExpectQNT,
+          "type":assetExpectType
+        });
+      }
 
       var allAssets = new Array();
       for(i = 0; i < assets.length; i++) {
@@ -197,12 +305,19 @@
                 var assetsWithQNT = new Array();
                 var expectedAssetsWithQNT = new Array();
                 for(i = 0; i < assetsState.state.length; i++) {
-                  if(assetsState.state[i].reftype == "assets") {
-                    delete assetsState.state[i].reftype;
-                    assetsWithQNT.push(assetsState.state[i]);
-                  } else if (assetsState.state[i].reftype == "expectedAssets") {
-                    delete assetsState.state[i].reftype;
-                    expectedAssetsWithQNT.push(assetsState.state[i]);
+                  if(assetsState.state[i].decimals < 0) {
+                    submitFailed(modal, "Incorrect Asset Id: " + assetsState.state[i].id);
+                    return;
+                  }
+                  var asset = assetsState.state[i];
+                  if(asset.reftype == "assets") {
+                    delete asset.reftype;
+                    delete asset.decimals;
+                    assetsWithQNT.push(asset);
+                  } else if (asset.reftype == "expectedAssets") {
+                    delete asset.reftype;
+                    delete asset.decimals;
+                    expectedAssetsWithQNT.push(asset);
                   }
                 }
 

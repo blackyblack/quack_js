@@ -238,36 +238,38 @@ function getDecimals(assets, callback) {
       txok(state, counter, "ok", callback);
       continue;
     } else {
-      state[i].decimals = 0;
+      state[i].decimals = -1;
       txok(state, counter, "ok", callback);
       continue;
     }
 
-    $.post(Constants.nxtApiUrl, apiobject,
+    $.ajax({
+      url: Constants.nxtApiUrl,
+      dataType: "json",
+      type: "POST",
+      context:{"id":state[i].id},
+      data: apiobject
+    }).done(function (result) {
+      var decimals = result.decimals;
+      if(!decimals) decimals = -1;
 
-      function(result) {
-
-        var decimals = result.decimals;
-        var assetId = result.asset;
-        if(!assetId) {
-          assetId = result.currency;
+      for (k = 0; k < length; k++) {
+        if(state[k].id == this.id) {
+          state[k].decimals = decimals;
         }
+      }
 
-        if(assetId && decimals) {
-          for (k = 0; k < length; k++) {
-            if(state[k].id == assetId) {
-              state[k].decimals = decimals;
-            }
-          }
+      txok(state, counter, "ok", callback);
 
-          txok(state, counter, "ok", callback);
-        } else {
-          txok(state, counter, "error", callback);
+    }).fail(function () {
+      for (k = 0; k < length; k++) {
+        if(state[k].id == this.id) {
+          state[k].decimals = -1;
         }
+      }
 
-      },
-      "json"
-    ).fail(function() { txok(state, counter, "error", callback); });
+      txok(state, counter, "error", callback);
+    });
   }
 }
 
@@ -322,16 +324,21 @@ function updateQuantity(assets, callback) {
 
         for(k = 0; k < assets.length; k++) {
           if(assetType == "NXT" && assets[k].type == "NXT") {
-            var price = new BigInteger(String(assets[k].QNT));
-            assets[k].QNT = price.multiply(new BigInteger("" + Math.pow(10, decimals))).toString();
+            assets[k].decimals = decimals;
+            if(decimals >= 0) {
+              var price = new BigInteger(String(assets[k].QNT));
+              assets[k].QNT = price.multiply(new BigInteger("" + Math.pow(10, decimals))).toString();
+            }
             continue;
           }
 
           if(assets[k].id != assetId) continue;
           if(assets[k].type != assetType) continue;
-
-          var price = new BigInteger(String(assets[k].QNT));
-          assets[k].QNT = price.multiply(new BigInteger("" + Math.pow(10, decimals))).toString();
+          assets[k].decimals = decimals;
+          if(decimals >= 0) {
+            var price = new BigInteger(String(assets[k].QNT));
+            assets[k].QNT = price.multiply(new BigInteger("" + Math.pow(10, decimals))).toString();
+          }
         }
       }
 
