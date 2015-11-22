@@ -2,7 +2,7 @@ var Quack = (function(Quack, $, undefined) {
   //Quack API
 
   ///HACK: account can be obtained with the secret but NXT plugin can give us account
-  Quack.account = "";
+  //Quack.account = "";
   Quack.currentBlock = 0;
 
   ///------------- public functions
@@ -44,7 +44,6 @@ var Quack = (function(Quack, $, undefined) {
           {
             messageObject = {
               "quack": 1,
-              "sender": Quack.account,
               "recipient": recipientRS,
               "triggerBytes": unsignedBytes,
               "assets": assets,
@@ -450,56 +449,6 @@ var Quack = (function(Quack, $, undefined) {
 
   ///------------- private functions
 
-  function now() {
-    var d = new Date(2013, 10, 24, 12, 0, 0, 0);
-    return Math.round((new Date().getTime() - d.getTime() + 500) / 1000);
-  }
-
-  function failed(callback) {
-    callback({"ret": "error", "result": "NRS not found"});
-  }
-
-  function errored(callback, result) {
-    console.log("error from NRS: " + JSON.stringify(result));
-    callback({"ret": "error", "result": result});
-  }
-
-  function txqueued(tx, queue, maxlength, callback) {
-
-    var txid = tx.transaction;
-    if (txid) {
-      console.log("Queued transaction: " + txid);
-      queue.push("" + txid);
-    } else {
-      console.log("error from NRS: " + tx);
-      queue.push("0");
-    }
-
-    queueReadyCallback(queue, maxlength, callback);
-  }
-
-  function queueReadyCallback(queue, length, callback) {
-    if(queue.length >= length) {
-      callback({"ret": "ok", "queue": queue});
-    }
-  }
-
-  function txok(state, counter, status, callback) {
-    if (status == "ok") {
-      counter.ok++;
-    } else {
-      counter.errors++;
-    }
-
-    okReadyCallback(state, counter, callback);
-  }
-
-  function okReadyCallback(state, counter, callback) {
-    if((counter.ok + counter.errors) >= counter.maxcount) {
-      callback({"ret": "ok", "state": state});
-    }
-  }
-
   function createtrigger(account, secret, deadline, fee, callback) {
     var messageJson = "{\"quack\":1,\"trigger\":1}";
 
@@ -545,7 +494,7 @@ var Quack = (function(Quack, $, undefined) {
         if(tx.amountNQT) {
           var payment = tx.amountNQT;
           var feeRecipient = tx.recipientRS;
-          var sender = message.sender;
+          var sender = tx.senderRS;
           var recipient = message.recipient;
 
           //check fee recipient and amount

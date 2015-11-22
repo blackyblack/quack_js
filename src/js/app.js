@@ -1,36 +1,52 @@
-///HACK: add lock attribute to modals to make them wait for response
-// save the original function object
-var _superModal = $.fn.modal;
-
-// add locked as a new option
-$.extend(_superModal.Constructor.DEFAULTS, {
-  locked: false
-});
-
-// capture the original hide
-var _hide = _superModal.Constructor.prototype.hide;
-
-// add the lock, unlock and override the hide of modal
-$.extend(_superModal.Constructor.prototype, {
-  // locks the dialog so that it cannot be hidden
-  lock: function() {
-    this.options.locked = true;
-    this.$element.addClass("locked");
+function now() {
+    var d = new Date(2013, 10, 24, 12, 0, 0, 0);
+    return Math.round((new Date().getTime() - d.getTime() + 500) / 1000);
   }
-  // unlocks the dialog so that it can be hidden by 'esc' or clicking on the backdrop (if not static)
-  ,
-  unlock: function() {
-    this.options.locked = false;
-    this.$element.removeClass("locked");
-  },
-  // override the original hide so that the original is only called if the modal is unlocked
-  hide: function() {
-    if (this.options.locked) {
-      return;
+
+  function failed(callback) {
+    callback({"ret": "error", "result": "NRS not found"});
+  }
+
+  function errored(callback, result) {
+    console.log("error from NRS: " + JSON.stringify(result));
+    callback({"ret": "error", "result": result});
+  }
+
+  function txqueued(tx, queue, maxlength, callback) {
+
+    var txid = tx.transaction;
+    if (txid) {
+      console.log("Queued transaction: " + txid);
+      queue.push("" + txid);
+    } else {
+      console.log("error from NRS: " + tx);
+      queue.push("0");
     }
-    _hide.apply(this, arguments);
+
+    queueReadyCallback(queue, maxlength, callback);
   }
-});
+
+  function queueReadyCallback(queue, length, callback) {
+    if(queue.length >= length) {
+      callback({"ret": "ok", "queue": queue});
+    }
+  }
+
+  function txok(state, counter, status, callback) {
+    if (status == "ok") {
+      counter.ok++;
+    } else {
+      counter.errors++;
+    }
+
+    okReadyCallback(state, counter, callback);
+  }
+
+  function okReadyCallback(state, counter, callback) {
+    if((counter.ok + counter.errors) >= counter.maxcount) {
+      callback({"ret": "ok", "state": state});
+    }
+  }
 
 function quackCreate() {
   var senderRS = "NXT-YTBB-LT9J-SRRR-7KLBQ";
@@ -193,4 +209,135 @@ function quackScan() {
     },
     "json"
   );
+}
+
+function getDecimals(assets, callback) {
+  var length = assets.length;
+  var state = assets;
+  var counter = {"ok": 0, "errors": 0, "maxcount": 0};
+  counter.maxcount = length;
+
+  for (i = 0; i < length; i++) {
+    var asset = assets[i];
+    var assetId = asset.id;
+
+    var apiobject = {};
+
+    if (asset.type == "A") {
+      apiobject = {
+        "requestType": "getAsset",
+        "asset": assetId
+      };
+    } else if (asset.type == "M") {
+      apiobject = {
+        "requestType": "getCurrency",
+        "currency": assetId
+      };
+    } else if (asset.type == "NXT") {
+      state[i].decimals = 8;
+      txok(state, counter, "ok", callback);
+      continue;
+    } else {
+      state[i].decimals = 0;
+      txok(state, counter, "ok", callback);
+      continue;
+    }
+
+    $.post(Constants.nxtApiUrl, apiobject,
+
+      function(result) {
+
+        var decimals = result.decimals;
+        var assetId = result.asset;
+        if(!assetId) {
+          assetId = result.currency;
+        }
+
+        if(assetId && decimals) {
+          for (k = 0; k < length; k++) {
+            if(state[k].id == assetId) {
+              state[k].decimals = decimals;
+            }
+          }
+
+          txok(state, counter, "ok", callback);
+        } else {
+          txok(state, counter, "error", callback);
+        }
+
+      },
+      "json"
+    ).fail(function() { txok(state, counter, "error", callback); });
+  }
+}
+
+//convert user amounts to amountQNT
+function updateQuantity(assets, callback) {
+  
+  var assetsSet = new Map();
+
+  for(i = 0; i < assets.length; i++) {
+    var asset = assets[i];
+    var assetId = "NXT";
+    var assetType = asset.type;
+    if(assetType == "A") {
+      assetId = "a:" + asset.id;
+    } else if (assetType == "M") {
+      assetId = "m:" + asset.id;
+    }
+    assetsSet.set(assetId, 1);
+  }
+
+  var allAssets = new Array();
+
+  for (var key of assetsSet.keys()) {
+    var asset = {};
+    var sub = key.substring(0, 2);
+    if(key == "NXT") {
+      asset.id = "1";
+      asset.type = "NXT"
+    }
+
+    if(sub == "a:") {
+      asset.id = key.substring(2);
+      asset.type = "A"
+    } else if (sub == "m:") {
+      asset.id = key.substring(2);
+      asset.type = "M"
+    }
+        
+    allAssets.push(asset);
+  }  
+
+  //allAssets now contains only unique assetIds
+
+  getDecimals(allAssets, function(assetsState) {
+    if(assetsState.ret == "ok") {
+
+      for(i = 0; i < assetsState.state.length; i++) {
+        var assetDecimalInfo = assetsState.state[i];
+        var assetId = assetDecimalInfo.id;
+        var decimals = assetDecimalInfo.decimals;
+        var assetType = assetDecimalInfo.type;
+
+        for(k = 0; k < assets.length; k++) {
+          if(assetType == "NXT" && assets[k].type == "NXT") {
+            var price = new BigInteger(String(assets[k].QNT));
+            assets[k].QNT = price.multiply(new BigInteger("" + Math.pow(10, decimals))).toString();
+            continue;
+          }
+
+          if(assets[k].id != assetId) continue;
+          if(assets[k].type != assetType) continue;
+
+          var price = new BigInteger(String(assets[k].QNT));
+          assets[k].QNT = price.multiply(new BigInteger("" + Math.pow(10, decimals))).toString();
+        }
+      }
+
+      callback({"ret":"ok", "state":assets});
+    } else {
+      callback(assetsState);
+    }
+  });
 }
