@@ -1,3 +1,110 @@
+/* .text-center in tables */
+table.text-center td,
+table.text-center th {
+  text-align: center;
+}
+
+input:invalid {
+  border: 1px solid red;
+}
+
+input.masked {
+  text-transform: uppercase;
+}
+
+.modal {
+  overflow-y: auto;
+}
+
+.modal-body {
+  padding-bottom:8px;
+} 
+
+.modal-backdrop {
+  height: 1500px !important;
+}
+.modal-context-help {
+  color: #4CAA6E;
+}
+
+/* 
+   All form elements including input, select, textarea etc.
+-----------------------------------------------------------------
+*/
+.form-control {
+  -webkit-border-radius: 0px !important;
+  -moz-border-radius: 0px !important;
+  border-radius: 0px !important;
+  box-shadow: none;
+}
+.form-control:focus {
+  border-color: #3c8dbc !important;
+  box-shadow: none;
+}
+.form-group.has-success label {
+  color: #00a65a;
+}
+.form-group.has-success .form-control {
+  border-color: #00a65a !important;
+  box-shadow: none;
+}
+.form-group.has-warning label {
+  color: #f39c12;
+}
+.form-group.has-warning .form-control {
+  border-color: #f39c12 !important;
+  box-shadow: none;
+}
+.form-group.has-error label {
+  color: #f56954;
+}
+.form-group.has-error .form-control {
+  border-color: #f56954 !important;
+  box-shadow: none;
+}
+/* Input group */
+.input-group .input-group-addon {
+  border-radius: 0;
+  background-color: #f4f4f4;
+}
+/* button groups */
+.btn-group-vertical .btn.btn-flat:first-of-type,
+.btn-group-vertical .btn.btn-flat:last-of-type {
+  border-radius: 0;
+}
+/* Checkbox and radio inputs */
+.checkbox,
+.radio {
+  padding-left: 0;
+}
+
+/* 
+    Dropdown menus
+----------------------------
+*/
+/*Dropdowns in general*/
+.dropdown-menu {
+  -webkit-box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+  z-index: 2300;
+}
+.dropdown-menu > li > a > .glyphicon,
+.dropdown-menu > li > a > .fa,
+.dropdown-menu > li > a > .ion {
+  margin-right: 10px;
+}
+
+/*Drodown in navbars*/
+.navbar .dropdown-menu > li > a { /*REMOVED skin-blue*/
+  color: #444444;
+}
+
+.dropdown-menu > li > a:hover {
+  background-color: #3c8dbc;
+  color: #f9f9f9;
+}
+
 /* 
     Component: callout
 ------------------------
@@ -292,5 +399,114 @@
 }
 .box > .loading-img {
   z-index: 1020;
-  background: transparent url('../img/ajax-loader.gif') 50% 50% no-repeat;
+  background: transparent url('../img/loading_indicator.gif') 50% 50% no-repeat;
+}
+
+.data-loading-container {
+  height: 200px;
+  text-align: center;
+}
+
+.data-loading-container img {
+  margin-top: 84px;
+}
+
+.data-loading-container, .data-empty-container {
+  display: none;
+}
+
+.data-container.data-loading .data-loading-container {
+  display: block;
+}
+
+.data-container.data-empty .data-empty-container {
+  display: block;
+}
+
+.data-container.data-empty table, .data-container.data-loading table {
+  display: none;
+}
+
+/* Add fade animation to dropdown menus */
+.open > .dropdown-menu {
+  animation-name: fadeAnimation;
+  animation-duration: .7s;
+  animation-iteration-count: 1;
+  animation-timing-function: ease;
+  animation-fill-mode: forwards;
+  -webkit-animation-name: fadeAnimation;
+  -webkit-animation-duration: .7s;
+  -webkit-animation-iteration-count: 1;
+  -webkit-animation-timing-function: ease;
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-name: fadeAnimation;
+  -moz-animation-duration: .7s;
+  -moz-animation-iteration-count: 1;
+  -moz-animation-timing-function: ease;
+  -moz-animation-fill-mode: forwards;
+}
+@keyframes fadeAnimation {
+  from {
+    opacity: 0;
+    top: 120%;
+  }
+  to {
+    opacity: 1;
+    top: 100%;
+  }
+}
+@-webkit-keyframes fadeAnimation {
+  from {
+    opacity: 0;
+    top: 120%;
+  }
+  to {
+    opacity: 1;
+    top: 100%;
+  }
+}
+/* Fix dropdown menu for small screens to display correctly on small screens */
+@media screen and (max-width: 767px) {
+  .navbar-nav > .notifications-menu > .dropdown-menu,
+  .navbar-nav > .user-menu > .dropdown-menu,
+  .navbar-nav > .tasks-menu > .dropdown-menu,
+  .navbar-nav > .messages-menu > .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: auto;
+    border-right: 1px solid #dddddd;
+    border-bottom: 1px solid #dddddd;
+    border-left: 1px solid #dddddd;
+    background: #ffffff;
+  }
+}
+
+/* Fix menu positions on xs screens to appear correctly and fully */
+@media screen and (max-width: 480px) {
+  .navbar-nav > .notifications-menu > .dropdown-menu > li.header,
+  .navbar-nav > .tasks-menu > .dropdown-menu > li.header,
+  .navbar-nav > .messages-menu > .dropdown-menu > li.header {
+    /* Remove arrow from the top */
+  }
+  .navbar-nav > .notifications-menu > .dropdown-menu > li.header:after,
+  .navbar-nav > .tasks-menu > .dropdown-menu > li.header:after,
+  .navbar-nav > .messages-menu > .dropdown-menu > li.header:after {
+    border-width: 0px!important;
+  }
+  .navbar-nav > .tasks-menu > .dropdown-menu {
+    position: absolute;
+    right: -120px;
+    left: auto;
+  }
+  .navbar-nav > .notifications-menu > .dropdown-menu {
+    position: absolute;
+    right: -170px;
+    left: auto;
+  }
+  .navbar-nav > .messages-menu > .dropdown-menu {
+    position: absolute;
+    right: -210px;
+    left: auto;
+  }
 }

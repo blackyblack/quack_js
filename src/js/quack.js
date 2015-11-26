@@ -4,6 +4,8 @@ var Quack = (function(Quack, $, undefined) {
   ///HACK: account can be obtained with the secret but NXT plugin can give us account
   //Quack.account = "";
   Quack.currentBlock = 0;
+  //storage for swaps information
+  Quack.swaps = new Map();
 
   ///------------- public functions
   

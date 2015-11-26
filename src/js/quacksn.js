@@ -1,4 +1,4 @@
-/*SuperNET compatibility layer*/
+//SuperNET compatibility layer
 
 ///HACK: add lock attribute to modals to make them wait for response
 // save the original function object

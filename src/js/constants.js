@@ -20,6 +20,8 @@ var Constants = (function(Constants, $, undefined) {
   Constants.triggerFee = 250000000;
   //default blocks count for a swap session
   Constants.swapBlocks = 720;
+  Constants.defaultConfirmations = 0;
+  Constants.defaultMessage = "You've got new Quack request. Use Quack plugin to check and accept the request.";
 
   return Constants;
 } (Constants || {}, jQuery));
