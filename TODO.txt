@@ -1,0 +1,9 @@
+- minFinishHeightA and minConfirmationsA, minFinishHeightB and minConfirmationsB
+- check phasing approvals instead of trigger
+- details modal
+- details in accept and finalize
+- current height on the main screen
+- add fee calculation
+- add optional finish height on Quack Create
+- add optional private message on Quack Create
+- icon

@@ -1,18 +1,19 @@
 var Quack = (function(Quack, $, undefined) {
   //Quack API
+  Quack.api = {};
 
   ///HACK: account can be obtained with the secret but NXT plugin can give us account
   //Quack.account = "";
-  Quack.currentBlock = 0;
+  Quack.api.currentBlock = 0;
   //storage for swaps information
-  Quack.swaps = new Map();
+  Quack.api.swaps = new Map();
 
   ///------------- public functions
   
   //init call
-  Quack.init = function(secret, recipientRS, finishHeight, assets, expectedAssets, privateMessage, callback) {
+  Quack.api.init = function(secret, recipientRS, finishHeight, assets, expectedAssets, privateMessage, callback) {
 
-    var rest = finishHeight - Quack.currentBlock;
+    var rest = finishHeight - Quack.api.currentBlock;
     var deadline = rest / 2;
 
     if (deadline < 3) {
@@ -27,7 +28,7 @@ var Quack = (function(Quack, $, undefined) {
     }
 
     console.log("creating trigger tx");
-    createtrigger(Constants.triggerAccount, secret, 1440, Constants.triggerFee, function(result) {
+    createtrigger(Quack.constants.triggerAccount, secret, 1440, Quack.constants.triggerFee, function(result) {
 
       if(result.fullHash) {
 
@@ -63,7 +64,7 @@ var Quack = (function(Quack, $, undefined) {
               "recipient": recipientRS,
               "secretPhrase": secret,
               "feeNQT": 0,
-              "broadcast": "" + Constants.broadcast,
+              "broadcast": "" + Quack.constants.broadcast,
               "deadline": "" + deadline,
               "amountNQT": "" + asset.QNT,
               "message": JSON.stringify(messageObject),
@@ -85,7 +86,7 @@ var Quack = (function(Quack, $, undefined) {
               "recipient": recipientRS,
               "secretPhrase": secret,
               "feeNQT": 0,
-              "broadcast": "" + Constants.broadcast,
+              "broadcast": "" + Quack.constants.broadcast,
               "deadline": "" + deadline,
               "asset": asset.id,
               "quantityQNT": "" + asset.QNT,
@@ -108,7 +109,7 @@ var Quack = (function(Quack, $, undefined) {
               "recipient": recipientRS,
               "secretPhrase": secret,
               "feeNQT": 0,
-              "broadcast": "" + Constants.broadcast,
+              "broadcast": "" + Quack.constants.broadcast,
               "deadline": "" + deadline,
               "currency": asset.id,
               "units": "" + asset.QNT,
@@ -129,14 +130,14 @@ var Quack = (function(Quack, $, undefined) {
             console.log("undefined asset type: " + asset.type);
           }
 
-          $.post(Constants.nxtApiUrl, apiobject,
+          $.post(Quack.constants.nxtApiUrl, apiobject,
 
             function(txobject) {
-              txqueued(txobject, txids, assets.length, callback);
+              Quack.utils.txqueued(txobject, txids, assets.length, callback);
             },
             "json"
           ).fail(function() {
-            txqueued("error", txids, assets.length, callback);
+            Quack.utils.txqueued("error", txids, assets.length, callback);
           });
 
           count++;
@@ -151,9 +152,9 @@ var Quack = (function(Quack, $, undefined) {
   }
 
   //trigger call
-  Quack.trigger = function(secret, triggerBytes, callback) {
+  Quack.api.trigger = function(secret, triggerBytes, callback) {
 
-    $.post(Constants.nxtApiUrl, {
+    $.post(Quack.constants.nxtApiUrl, {
       "requestType": "signTransaction",
       "unsignedTransactionBytes": triggerBytes,
       "secretPhrase": secret
@@ -164,7 +165,7 @@ var Quack = (function(Quack, $, undefined) {
         var txBytes = result.transactionBytes;
         if (txBytes) {
 
-          $.post(Constants.nxtApiUrl, {
+          $.post(Quack.constants.nxtApiUrl, {
             "requestType": "broadcastTransaction",
             "transactionBytes": txBytes
             },
@@ -178,23 +179,23 @@ var Quack = (function(Quack, $, undefined) {
                 callback({"ret": "ok", "txid": txid});
                 
               } else {
-                errored(callback, result2);
+                Quack.utils.errored(callback, result2);
               }
                       
             },
             "json"
-          ).fail(function() { failed(callback); });
+          ).fail(function() { Quack.utils.failed(callback); });
         } else {
-          errored(callback, result);
+          Quack.utils.errored(callback, result);
         }
 
       },
       "json"
-    ).fail(function() { failed(callback); });
+    ).fail(function() { Quack.utils.failed(callback); });
   }
 
   //accept call
-  Quack.accept = function(secret, recipientRS, finishHeight, assets, triggerHash, callback) {
+  Quack.api.accept = function(secret, recipientRS, finishHeight, assets, triggerHash, callback) {
 
     var rest = finishHeight - Quack.currentBlock;
     var deadline = rest / 2;
@@ -224,7 +225,7 @@ var Quack = (function(Quack, $, undefined) {
           "recipient": recipientRS,
           "secretPhrase": secret,
           "feeNQT": 0,
-          "broadcast": "" + Constants.broadcast,
+          "broadcast": "" + Quack.constants.broadcast,
           "deadline": "" + deadline,
           "amountNQT": "" + asset.QNT,
           "message": messageJson,
@@ -242,7 +243,7 @@ var Quack = (function(Quack, $, undefined) {
           "recipient": recipientRS,
           "secretPhrase": secret,
           "feeNQT": 0,
-          "broadcast": "" + Constants.broadcast,
+          "broadcast": "" + Quack.constants.broadcast,
           "deadline": "" + deadline,
           "asset": asset.id,
           "quantityQNT": "" + asset.QNT,
@@ -261,7 +262,7 @@ var Quack = (function(Quack, $, undefined) {
           "recipient": recipientRS,
           "secretPhrase": secret,
           "feeNQT": 0,
-          "broadcast": "" + Constants.broadcast,
+          "broadcast": "" + Quack.constants.broadcast,
           "deadline": "" + deadline,
           "currency": asset.id,
           "units": "" + asset.QNT,
@@ -278,14 +279,14 @@ var Quack = (function(Quack, $, undefined) {
         console.log("undefined asset type: " + asset.type);
       }
 
-      $.post(Constants.nxtApiUrl, apiobject,
+      $.post(Quack.constants.nxtApiUrl, apiobject,
 
         function(txobject) {
-          txqueued(txobject, txids, assets.length, callback);
+          Quack.utils.txqueued(txobject, txids, assets.length, callback);
         },
         "json"
       ).fail(function() {
-        txqueued("error", txids, assets.length, callback);
+        Quack.utils.txqueued("error", txids, assets.length, callback);
       });
     }
   }
@@ -294,15 +295,15 @@ var Quack = (function(Quack, $, undefined) {
   //account - what account to scan
   //timelimit - limit in seconds how old transactions do we scan
   //callback - returns {ret:ok, swaps:swaps} on success
-  Quack.scan = function(account, timelimit, callback) {
+  Quack.api.scan = function(account, timelimit, callback) {
     //create a hashmap of swap sessions with fullHash as a key
     var lookup = new Map();
 
     var timestamp = "" + 0;
-    if ((now() - timelimit) > 0) timestamp = "" + (now() - timelimit);
+    if ((Quack.utils.now() - timelimit) > 0) timestamp = "" + (Quack.utils.now() - timelimit);
 
     //get a list of transaction for account
-    $.post(Constants.nxtApiUrl, {
+    $.post(Quack.constants.nxtApiUrl, {
       "requestType": "getBlockchainTransactions",
       "account": account,
       "timestamp": timestamp
@@ -330,7 +331,7 @@ var Quack = (function(Quack, $, undefined) {
             try {
               jsonMessage = JSON.parse(message);
             } catch (e) {
-              console.log("could not parse: " + message);
+              console.log("could not parse message. txid = " + tx.transaction);
             }
             if(!jsonMessage) continue;
 
@@ -440,11 +441,11 @@ var Quack = (function(Quack, $, undefined) {
           }
           
         } else {
-          errored(callback, result);
+          Quack.utils.errored(callback, result);
         }
       },
       "json"
-    ).fail(function() { failed(callback); });
+    ).fail(function() { Quack.utils.failed(callback); });
   }
 
   ///------------- private functions
@@ -452,7 +453,7 @@ var Quack = (function(Quack, $, undefined) {
   function createtrigger(account, secret, deadline, fee, callback) {
     var messageJson = "{\"quack\":1,\"trigger\":1}";
 
-    $.post(Constants.nxtApiUrl, {
+    $.post(Quack.constants.nxtApiUrl, {
       "requestType": "sendMoney",
       "recipient": account,
       "secretPhrase": secret,
@@ -469,23 +470,23 @@ var Quack = (function(Quack, $, undefined) {
         callback(result);
       },
       "json"
-    ).fail(function() { failed(callback); });
+    ).fail(function() { Quack.utils.failed(callback); });
   }
 
   function tryUpdateInformation(state, counter, account, sender, hashdata, message, callback) {
     var swapInfo = state.lookup.get(hashdata);
     if(swapInfo.assets && swapInfo.assets.length > 0 && txSender != account) {
-      txok(state, counter, "error", callback);
+      Quack.utils.txok(state, counter, "error", callback);
       return;
     }
 
     if(!message) {
-      txok(state, counter, "error", callback);
+      Quack.utils.txok(state, counter, "error", callback);
       return;
     }
 
     //parse trigger bytes to get swap data
-    $.post(Constants.nxtApiUrl, {
+    $.post(Quack.constants.nxtApiUrl, {
       "requestType": "parseTransaction",
       "transactionBytes": message.triggerBytes
       },
@@ -498,13 +499,13 @@ var Quack = (function(Quack, $, undefined) {
           var recipient = message.recipient;
 
           //check fee recipient and amount
-          if(payment < Constants.triggerFee) {
-            txok(state, counter, "error", callback);
+          if(payment < Quack.constants.triggerFee) {
+            Quack.utils.txok(state, counter, "error", callback);
             return;
           }
 
-          if(feeRecipient != Constants.triggerAccount) {
-            txok(state, counter, "error", callback);
+          if(feeRecipient != Quack.constants.triggerAccount) {
+            Quack.utils.txok(state, counter, "error", callback);
             return;
           }
           
@@ -515,14 +516,14 @@ var Quack = (function(Quack, $, undefined) {
           swapInfo.expectedAssets = message.expected_assets;
           state.lookup.set(hashdata, swapInfo);
 
-          txok(state, counter, "ok", callback);
+          Quack.utils.txok(state, counter, "ok", callback);
         } else {
-          txok(state, counter, "error", callback);
+          Quack.utils.txok(state, counter, "error", callback);
         } 
       },
       "json"
     ).fail(function() {
-      txok(state, counter, "error", callback);
+      Quack.utils.txok(state, counter, "error", callback);
     });
 
     

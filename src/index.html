@@ -240,20 +240,37 @@
   <script src="js/jsbn2.js"></script>
 
   <!--common script for all pages-->
-  <script src="js/constants.js"></script>
-  <script src="js/quack.js"></script>
-  <script src="js/quacksn.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/quack.constants.js"></script>
+  <script src="js/quack.utils.js"></script>
+  <script src="js/quack.api.js"></script>
+  <script src="js/quack.sn.js"></script>
 
   <script>
     $(document).ready(function() {
-      if(Constants.isPlugin) {
+      if(Quack.constants.isPlugin) {
         $("#quackMainAccountGroup").hide();
       } else {
         $("#quackMainAccount").mask("NXT-****-****-****-*****");
         $("#quackMainAccountGroup").show();
       }
     });
+
+    var submitProgress = function(modal) {
+    }
+
+    var submitOk = function(modal) {
+      modal.modal("hide");
+    }
+
+    var submitFailed = function(modal, response) {
+      modal.find(".error_message").html(response).show();
+    }
+
+    if(!Quack.constants.isPlugin) {
+      submitProgress = Quack.sn.submitProgress;
+      submitOk = Quack.sn.submitOk;
+      submitFailed = Quack.sn.submitFailed;
+    }
 
     $("#quackCreateModal").on("show.bs.modal", function () {
       var type = $("#quackCreateAssetType").val();
@@ -341,7 +358,7 @@
       var secret = modal.find("#quackCreatePassword").val();
       var assets = new Array();
       var expectedAssets = new Array();
-      var privateMessage = Constants.defaultMessage;
+      var privateMessage = Quack.constants.defaultMessage;
       var assetType = modal.find("#quackCreateAssetType").val();
       var assetId = modal.find("#quackCreateAsset").val();
       var assetQNT = modal.find("#quackCreateQuantity").val();
@@ -408,7 +425,7 @@
         allAssets.push(asset);
       }
 
-      $.post(Constants.nxtApiUrl, {
+      $.post(Quack.constants.nxtApiUrl, {
         "requestType": "getBlockchainStatus"
         },
 
@@ -417,9 +434,9 @@
           var currentBlock = status.numberOfBlocks;
 
           if(currentBlock) {
-            var finishHeight = currentBlock + Constants.swapBlocks;
+            var finishHeight = currentBlock + Quack.constants.swapBlocks;
 
-            updateQuantity(allAssets, function(assetsState) {
+            Quack.utils.updateQuantity(allAssets, function(assetsState) {
               if(assetsState.ret == "ok") {
 
                 var assetsWithQNT = new Array();
@@ -441,8 +458,8 @@
                   }
                 }
 
-                Quack.currentBlock = currentBlock;
-                Quack.init(secret, recipientRS, finishHeight, assetsWithQNT, expectedAssetsWithQNT, privateMessage, function(result) {
+                Quack.api.currentBlock = currentBlock;
+                Quack.api.init(secret, recipientRS, finishHeight, assetsWithQNT, expectedAssetsWithQNT, privateMessage, function(result) {
 
                   if(result.ret == "ok") {
 
@@ -490,11 +507,11 @@
       submitProgress(modal);
       
       var key = modal.attr("extra");
-      var swap = Quack.swaps.get(key);
+      var swap = Quack.api.swaps.get(key);
       var assets = swap.expectedAssets;
       var secret = modal.find("#quackAcceptPassword").val();
 
-      $.post(Constants.nxtApiUrl, {
+      $.post(Quack.constants.nxtApiUrl, {
         "requestType": "getBlockchainStatus"
         },
 
@@ -506,8 +523,8 @@
 
           if(currentBlock) {
 
-            Quack.currentBlock = currentBlock;
-            Quack.accept(secret, swap.sender, finishHeight, assets, triggerHash, function(result) {
+            Quack.api.currentBlock = currentBlock;
+            Quack.api.accept(secret, swap.sender, finishHeight, assets, triggerHash, function(result) {
 
               ///TODO: make proper NRS error processing
               if(result.ret == "ok") {
@@ -554,11 +571,11 @@
       submitProgress(modal);
       
       var key = modal.attr("extra");
-      var swap = Quack.swaps.get(key);
+      var swap = Quack.api.swaps.get(key);
       var assets = swap.expectedAssets;
       var secret = modal.find("#quackFinalizePassword").val();
 
-      $.post(Constants.nxtApiUrl, {
+      $.post(Quack.constants.nxtApiUrl, {
         "requestType": "getBlockchainStatus"
         },
 
@@ -572,8 +589,8 @@
 
           if(currentBlock) {
 
-            Quack.currentBlock = currentBlock;
-            Quack.trigger(secret, triggerBytes, function(result)  {
+            Quack.api.currentBlock = currentBlock;
+            Quack.api.trigger(secret, triggerBytes, function(result)  {
 
               ///TODO: make proper NRS error processing
               if(result.ret == "ok") {
@@ -611,7 +628,7 @@
 
       pageLoading();
 
-      $.post(Constants.nxtApiUrl, {
+      $.post(Quack.constants.nxtApiUrl, {
         "requestType": "getBlockchainStatus"
         },
 
@@ -620,8 +637,8 @@
           var currentBlock = status.numberOfBlocks;
 
           if(currentBlock) {
-            Quack.currentBlock = currentBlock;
-            Quack.scan(account, timelimit, function(result) {
+            Quack.api.currentBlock = currentBlock;
+            Quack.api.scan(account, timelimit, function(result) {
 
               if(result.ret == "ok") {
 
@@ -636,9 +653,9 @@
                     status = "Finalized";
                   } else {
                     //show Expired status for B earlier since A should have time to finalize it
-                    var limitBlocks = Constants.defaultConfirmations;
+                    var limitBlocks = Quack.constants.defaultConfirmations;
                     if(account == swap.recipient) {
-                      limitBlocks = Constants.defaultConfirmations * 2;
+                      limitBlocks = Quack.constants.defaultConfirmations * 2;
                     }
                     if(swap.minFinishHeight < (currentBlock + limitBlocks)) status = "Expired";
                     else {
@@ -769,7 +786,7 @@
       //check that assetsA has enough confirmations (UnconfirmedA)
       for(i = 0; i < assetsA.length; i++) {
         if (!assetsA[i].tx) continue;
-        if (assetsA[i].tx.confirmations < Constants.defaultConfirmations) {
+        if (assetsA[i].tx.confirmations < Quack.constants.defaultConfirmations) {
           status = "UnconfirmedA";
           return status;
         }
@@ -778,7 +795,7 @@
       //check that assetsB has enough confirmations (UnconfirmedB)
       for(i = 0; i < assetsB.length; i++) {
         if (!assetsB[i].tx) continue;
-        if (assetsB[i].tx.confirmations < Constants.defaultConfirmations) {
+        if (assetsB[i].tx.confirmations < Quack.constants.defaultConfirmations) {
           status = "UnconfirmedB";
           return status;
         }
