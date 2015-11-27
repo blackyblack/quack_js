@@ -26,14 +26,24 @@
 <body class="full-width">
 
   <section id="container" class="">
-    <button type="button" id="quackCreateButton" class="btn btn-success" data-toggle="modal" data-target="#quackCreateModal">Create</button>
-    <button type="button" id="quackTriggerButton" class="btn btn-success" onclick="quackTrigger();">Trigger</button>
-    <button type="button" id="quackAcceptButton" class="btn btn-success" onclick="quackAccept();">Accept</button>
-    <button type="button" id="quackScanButton" class="btn btn-success" onclick="quackScan();">Scan</button>
+    <!-- account field -->
+    <div class="row" style="text-align:center;display:none" id="quackMainAccountGroup">
+      <div style="width:300px;margin:0;margin:0 auto;padding:12px;">
+        <form style="text-align:center" autocomplete="off">
+          <label for="quackMainAccount" data-i18n="account">My Account</label>
+          <input type="text" name="account" class="form-control" placeholder="My Account" data-i18n="[placeholder]my_account" id="quackMainAccount" />
+        </form>
+      </div>
+    </div>
+
+    <div class="row" style="text-align:center">
+      <button type="button" id="quackCreateButton" class="btn btn-success" data-toggle="modal" data-target="#quackCreateModal">Create</button>
+      <button type="button" id="quackScanButton" class="btn btn-success" onclick="quackScan();">Scan</button>
+    </div>
   </section>
 
   <div id="quackHistoryPage" class="page">
-    <section class="content-header"><h2 data-i18n="quack_history">Quack History</h2></section>
+    <section class="content-header" style="text-align:center"><h2 data-i18n="quack_history">Quack History</h2></section>
     <section class="content">
       <div class="data-container">
         <table class="table table-striped" id="quackHistoryTable">
@@ -161,13 +171,14 @@
           </form>
         </div>
         <div class="modal-footer" style="margin-top:0;">
-          <button type="button" class="btn btn-primary" data-loading-text="Submitting..." onclick="submitQuackCreate();">OK</button>
+          <button type="button" class="btn btn-primary" data-loading-text="Submitting..." onclick="submitQuackCreate();">Create</button>
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Quack Accept modal -->
   <div id="quackAcceptModal" class="modal fade" role="dialog">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -187,7 +198,34 @@
           </form>
         </div>
         <div class="modal-footer" style="margin-top:0;">
-          <button type="button" class="btn btn-primary" data-loading-text="Submitting..." onclick="submitQuackAccept(this);">OK</button>
+          <button type="button" class="btn btn-primary" data-loading-text="Submitting..." onclick="submitQuackAccept();">Accept</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quack Finalize modal -->
+  <div id="quackFinalizeModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Finalize Quack</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="quackFinalizeForm" autocomplete="off">
+            <div class="callout callout-danger error_message" style="display:none"></div>
+
+            <!-- secret phrase field -->
+            <div class="form-group secret_phrase">
+              <label for="quackFinalizePassword" data-i18n="passphrase">PASSPHRASE</label>
+              <input type="password" name="secretPhrase" id="quackFinalizePassword" class="form-control" placeholder="" tabindex="111">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer" style="margin-top:0;">
+          <button type="button" class="btn btn-primary" data-loading-text="Submitting..." onclick="submitQuackTrigger();">Finalize</button>
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
       </div>
@@ -208,6 +246,15 @@
   <script src="js/app.js"></script>
 
   <script>
+    $(document).ready(function() {
+      if(Constants.isPlugin) {
+        $("#quackMainAccountGroup").hide();
+      } else {
+        $("#quackMainAccount").mask("NXT-****-****-****-*****");
+        $("#quackMainAccountGroup").show();
+      }
+    });
+
     $("#quackCreateModal").on("show.bs.modal", function () {
       var type = $("#quackCreateAssetType").val();
       if(type == "NXT") {
@@ -412,7 +459,11 @@
                     if (queueOk) {
                       submitOk(modal);
                     } else {
-                      submitFailed(modal, "NRS partial response received. Check your Quacks status later.");
+                      if(ids.length > 0) {
+                        submitFailed(modal, "NRS partial response received. Check your Quacks status later.");
+                      } else {
+                        submitFailed(modal, "Quack Create failed");
+                      }
                     }
 
                   }
@@ -434,7 +485,7 @@
       });
     }
 
-    function submitQuackAccept(btn) {
+    function submitQuackAccept() {
       var modal = $("#quackAcceptModal");
       submitProgress(modal);
       
@@ -458,9 +509,9 @@
             Quack.currentBlock = currentBlock;
             Quack.accept(secret, swap.sender, finishHeight, assets, triggerHash, function(result) {
 
+              ///TODO: make proper NRS error processing
               if(result.ret == "ok") {
 
-                //console.log("Success response");
                 var ids = result.queue;
                 var queueOk = false;
                 for(k = 0; k < ids.length; k++) {
@@ -473,7 +524,11 @@
                 if (queueOk) {
                   submitOk(modal);
                 } else {
-                  submitFailed(modal, "NRS partial response received. Check your Quacks status later.");
+                  if(ids.length > 0) {
+                    submitFailed(modal, "NRS partial response received. Check your Quacks status later.");
+                  } else {
+                    submitFailed(modal, "Quack Accept failed");
+                  }
                 }
 
               }
@@ -494,9 +549,64 @@
       });
     }
 
+    function submitQuackTrigger() {
+      var modal = $("#quackFinalizeModal");
+      submitProgress(modal);
+      
+      var key = modal.attr("extra");
+      var swap = Quack.swaps.get(key);
+      var assets = swap.expectedAssets;
+      var secret = modal.find("#quackFinalizePassword").val();
+
+      $.post(Constants.nxtApiUrl, {
+        "requestType": "getBlockchainStatus"
+        },
+
+        function(status) {
+
+          var currentBlock = status.numberOfBlocks;
+          var finishHeight = swap.minFinishHeight;
+          var triggerBytes = swap.triggerBytes;
+
+          ///TODO: check finish height one more time
+
+          if(currentBlock) {
+
+            Quack.currentBlock = currentBlock;
+            Quack.trigger(secret, triggerBytes, function(result)  {
+
+              ///TODO: make proper NRS error processing
+              if(result.ret == "ok") {
+
+                var id = result.txid;
+
+                if (id && id != "" && id != "0") {
+                  submitOk(modal);
+                } else {
+                  submitFailed(modal, "Quack Trigger failed");
+                }
+
+              }
+              else {
+                //console.log("Error response");
+                console.log("result = " + JSON.stringify(result.result));
+                submitFailed(modal, "Quack Trigger failed");
+              }
+        
+            });
+          } else {
+            submitFailed(modal, "NRS problem occured");
+          }
+        },
+        "json"
+      ).fail(function() {
+        submitFailed(modal, "NRS problem occured");
+      });
+    }
+
     function quackScan() {
       var rows = "";
-      var account = "NXT-GAHZ-GQNW-ANZS-6A4WW";
+      var account = $("#quackMainAccount").val();
       var timelimit = 60 * 60 * 24 * 100;
 
       pageLoading();
@@ -713,12 +823,14 @@
     }
 
     function quackSwapTrigger(btn) {
+      //attach hash to modal and show it
       var key = btn.getAttribute("extra");
-      var swap = Quack.swaps.get(key);
-      console.log("trigger for " + swap.sender);
+      $("#quackFinalizeModal").attr("extra", key);
+      $("#quackFinalizeModal").modal("show");
     }
 
     function quackSwapAccept(btn) {
+      //attach hash to modal and show it
       var key = btn.getAttribute("extra");
       $("#quackAcceptModal").attr("extra", key);
       $("#quackAcceptModal").modal("show");

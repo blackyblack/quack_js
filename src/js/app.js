@@ -1,214 +1,51 @@
 function now() {
-    var d = new Date(2013, 10, 24, 12, 0, 0, 0);
-    return Math.round((new Date().getTime() - d.getTime() + 500) / 1000);
-  }
-
-  function failed(callback) {
-    callback({"ret": "error", "result": "NRS not found"});
-  }
-
-  function errored(callback, result) {
-    console.log("error from NRS: " + JSON.stringify(result));
-    callback({"ret": "error", "result": result});
-  }
-
-  function txqueued(tx, queue, maxlength, callback) {
-
-    var txid = tx.transaction;
-    if (txid) {
-      console.log("Queued transaction: " + txid);
-      queue.push("" + txid);
-    } else {
-      console.log("error from NRS: " + tx);
-      queue.push("0");
-    }
-
-    queueReadyCallback(queue, maxlength, callback);
-  }
-
-  function queueReadyCallback(queue, length, callback) {
-    if(queue.length >= length) {
-      callback({"ret": "ok", "queue": queue});
-    }
-  }
-
-  function txok(state, counter, status, callback) {
-    if (status == "ok") {
-      counter.ok++;
-    } else {
-      counter.errors++;
-    }
-
-    okReadyCallback(state, counter, callback);
-  }
-
-  function okReadyCallback(state, counter, callback) {
-    if((counter.ok + counter.errors) >= counter.maxcount) {
-      callback({"ret": "ok", "state": state});
-    }
-  }
-
-function quackCreate() {
-  var senderRS = "NXT-YTBB-LT9J-SRRR-7KLBQ";
-  var recipientRS = "NXT-GAHZ-GQNW-ANZS-6A4WW";
-  var secret = "blackyblack";
-  var assets = new Array();
-  var expectedAssets = new Array();
-  var privateMessage = "";
-
-  Quack.account = senderRS;
-
-  assets.push({
-    "id":"17091401215301664836",
-    "QNT":5,
-    "type":"A"
-  });
-  
-  expectedAssets.push({
-    "id":"1",
-    "QNT":5,
-    "type":"NXT"
-  });
-
-  $.post(Constants.nxtApiUrl, {
-    "requestType": "getBlockchainStatus"
-    },
-
-    function(status) {
-
-      var currentBlock = status.numberOfBlocks;  
-      var finishHeight = currentBlock + Constants.swapBlocks;
-
-      Quack.currentBlock = currentBlock;
-      Quack.init(secret, recipientRS, finishHeight, assets, expectedAssets, privateMessage, function(result) {
-        ///TODO: show success code on UI
-        console.log("UI update here");
-
-        if(result.ret == "ok") {
-
-          console.log("Success response");
-          var ids = result.queue;
-          ///TODO: check ids for 0 return. At least one 0 in ids is error.
-          console.log("queue: " + ids);
-        }
-        else {
-          console.log("Error response");
-          console.log("result = " + JSON.stringify(result.result));
-        }
-
-      });
-    },
-    "json"
-  );
+  var d = new Date(2013, 10, 24, 12, 0, 0, 0);
+  return Math.round((new Date().getTime() - d.getTime() + 500) / 1000);
 }
 
-function quackTrigger() {
-  var senderRS = "NXT-YTBB-LT9J-SRRR-7KLBQ";
-  var secret = "blackyblack";
-
-  Quack.account = senderRS;
-
-  var triggerBytes = "001013aeb903a0054ec621bae8b0f35a31cdf81d29e15d8ca78026a4b3034b3a4fb3a41b6b375a7129650f4f9651265b80b2e60e0000000000e1f5050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000783b0700c9d651ab3cf50e1001170000807b22717561636b223a312c2274726967676572223a317d";
-
-  Quack.trigger(secret, triggerBytes, function(result) {
-    ///TODO: show success code on UI
-    console.log("UI update here");
-
-    if(result.ret == "ok") {
-
-      console.log("Success response");
-      var txid = result.txid;
-      console.log("txid: " + txid);
-    }
-    else {
-      console.log("Error response");
-      console.log("result = " + JSON.stringify(result.result));
-    }
-  });
+function failed(callback) {
+  callback({"ret": "error", "result": "NRS not found"});
 }
 
-function quackAccept() {
-  var senderRS = "NXT-YTBB-LT9J-SRRR-7KLBQ";
-  var recipientRS = "NXT-GAHZ-GQNW-ANZS-6A4WW";
-  var secret = "blackyblack";
-  var assets = new Array();
-
-  Quack.account = senderRS;
-  
-  assets.push({
-    "id":"1",
-    "QNT":5,
-    "type":"NXT"
-  });
-
-  $.post(Constants.nxtApiUrl, {
-    "requestType": "getBlockchainStatus"
-    },
-
-    function(status) {
-
-      var currentBlock = status.numberOfBlocks;
-      ///HACK: finishHeight must be equal to assets tx finishHeight
-      var finishHeight = currentBlock + Constants.swapBlocks;
-      var triggerHash = "0f5f58042971ef5ec188483c172d133847880e2b7bf0bd80b0071028d5dbe5a9";
-
-      Quack.currentBlock = currentBlock;
-      Quack.accept(secret, recipientRS, finishHeight, assets, triggerHash, function(result) {
-        ///TODO: show success code on UI
-        console.log("UI update here");
-
-        if(result.ret == "ok") {
-
-          console.log("Success response");
-          var ids = result.queue;
-          ///TODO: check ids for 0 return. At least one 0 in ids is error.
-          console.log("queue: " + ids);
-        }
-        else {
-          console.log("Error response");
-          console.log("result = " + JSON.stringify(result.result));
-        }
-    
-      });
-    },
-    "json"
-  );
+function errored(callback, result) {
+  console.log("error from NRS: " + JSON.stringify(result));
+  callback({"ret": "error", "result": result});
 }
 
-function quackScan() {
-  var senderRS = "NXT-YTBB-LT9J-SRRR-7KLBQ";
-  var timelimit = 60 * 60 * 24 * 100;
+function txqueued(tx, queue, maxlength, callback) {
 
-  $.post(Constants.nxtApiUrl, {
-    "requestType": "getBlockchainStatus"
-    },
+  var txid = tx.transaction;
+  if (txid) {
+    console.log("Queued transaction: " + txid);
+    queue.push("" + txid);
+  } else {
+    console.log("error from NRS: " + tx);
+    queue.push("0");
+  }
 
-    function(status) {
+  queueReadyCallback(queue, maxlength, callback);
+}
 
-      var currentBlock = status.numberOfBlocks;
+function queueReadyCallback(queue, length, callback) {
+  if(queue.length >= length) {
+    callback({"ret": "ok", "queue": queue});
+  }
+}
 
-      Quack.currentBlock = currentBlock;
-      Quack.scan(senderRS, timelimit, function(result) {
-        ///TODO: show success code on UI
-        console.log("UI update here");
+function txok(state, counter, status, callback) {
+  if (status == "ok") {
+    counter.ok++;
+  } else {
+    counter.errors++;
+  }
 
-        if(result.ret == "ok") {
+  okReadyCallback(state, counter, callback);
+}
 
-          console.log("Success response");
-          var swaps = result.state.lookup;
-          for (var key of swaps.keys()) {
-            console.log("swap: " + key + " -> " + JSON.stringify(swaps.get(key)));
-          }
-        }
-        else {
-          console.log("Error response");
-          console.log("result = " + JSON.stringify(result.result));
-        }
-    
-      });
-    },
-    "json"
-  );
+function okReadyCallback(state, counter, callback) {
+  if((counter.ok + counter.errors) >= counter.maxcount) {
+    callback({"ret": "ok", "state": state});
+  }
 }
 
 function getDecimals(assets, callback) {

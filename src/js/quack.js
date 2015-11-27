@@ -375,8 +375,6 @@ var Quack = (function(Quack, $, undefined) {
 
             var txType = tx.type;
             var txSubtype = tx.subtype;
-            if(!txType) continue;
-            if(!txSubtype) continue;
 
             //update swap information in map based on this info
             var swapInfo = lookup.get(hashdata);

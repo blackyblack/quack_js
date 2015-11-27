@@ -1,13 +1,18 @@
 var Constants = (function(Constants, $, undefined) {
 
+  Constants.isPlugin = false;
   Constants.isTestnet = true;
   ///TODO: broadcast = true
-  Constants.broadcast = false;
+  Constants.broadcast = true;
   Constants.nxtApiUrl = "http://localhost:7876/nxt";
   
   if(Constants.isTestnet)
   {
     Constants.nxtApiUrl = "http://localhost:6876/nxt";
+  }
+
+  if(Constants.isPlugin) {
+    Constants.nxtApiUrl = "nxt";
   }
 
   Constants.triggerAccount = "NXT-DAXR-PR6C-EA3X-8YGM4";
