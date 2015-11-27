@@ -643,7 +643,7 @@
               if(result.ret == "ok") {
 
                 var swaps = result.state.lookup;
-                Quack.swaps = swaps;
+                Quack.api.swaps = swaps;
 
                 var status = "Unknown";
                 for (var key of swaps.keys()) {
@@ -783,48 +783,17 @@
         }
       }
 
-      //check that assetsA has enough confirmations (UnconfirmedA)
-      for(i = 0; i < assetsA.length; i++) {
-        if (!assetsA[i].tx) continue;
-        if (assetsA[i].tx.confirmations < Quack.constants.defaultConfirmations) {
-          status = "UnconfirmedA";
-          return status;
-        }
+      if(swap.minConfirmationsA < Quack.constants.defaultConfirmations) {
+        status = "UnconfirmedA";
+        return status;
       }
 
-      //check that assetsB has enough confirmations (UnconfirmedB)
-      for(i = 0; i < assetsB.length; i++) {
-        if (!assetsB[i].tx) continue;
-        if (assetsB[i].tx.confirmations < Quack.constants.defaultConfirmations) {
-          status = "UnconfirmedB";
-          return status;
-        }
+      if(swap.minConfirmationsB < Quack.constants.defaultConfirmations) {
+        status = "UnconfirmedB";
+        return status;
       }
 
-      //check that assetsB minFinishHeight is less or equal to assetsA minFinishHeight (Invalid)
-      var minFinishHeightA = -1;
-      for(i = 0; i < assetsA.length; i++) {
-        if (!assetsA[i].tx) continue;
-        var attach = assetsA[i].tx.attachment;
-        if (!attach) continue;
-        var finishHeight = attach.phasingFinishHeight;
-        if(!finishHeight) continue;
-        if(minFinishHeightA < 0) minFinishHeightA = finishHeight;
-        if(finishHeight < minFinishHeightA) minFinishHeightA = finishHeight;
-      }
-
-      var minFinishHeightB = -1;
-      for(i = 0; i < assetsB.length; i++) {
-        if (!assetsB[i].tx) continue;
-        var attach = assetsB[i].tx.attachment;
-        if (!attach) continue;
-        var finishHeight = attach.phasingFinishHeight;
-        if(!finishHeight) continue;
-        if(minFinishHeightB < 0) minFinishHeightB = finishHeight;
-        if(finishHeight < minFinishHeightB) minFinishHeightB = finishHeight;
-      }
-
-      if(minFinishHeightB > 0 && minFinishHeightB > minFinishHeightA) {
+      if(swap.minFinishHeightB > swap.minFinishHeightA) {
         status = "Invalid";
         return status;
       }
@@ -835,7 +804,7 @@
 
     function quackSwapDetails(btn) {
       var key = btn.getAttribute("extra");
-      var swap = Quack.swaps.get(key);
+      var swap = Quack.api.swaps.get(key);
       console.log("details for " + swap.sender);
     }
 

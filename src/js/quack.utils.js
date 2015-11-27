@@ -80,7 +80,7 @@ var Quack = (function(Quack, $, undefined) {
         data: apiobject
       }).done(function (result) {
         var decimals = result.decimals;
-        if(!decimals) decimals = -1;
+        if(typeof decimals === "undefined") decimals = -1;
 
         for (k = 0; k < length; k++) {
           if(state[k].id == this.id) {

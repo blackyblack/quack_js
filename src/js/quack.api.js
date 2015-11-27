@@ -3,7 +3,6 @@ var Quack = (function(Quack, $, undefined) {
   Quack.api = {};
 
   ///HACK: account can be obtained with the secret but NXT plugin can give us account
-  //Quack.account = "";
   Quack.api.currentBlock = 0;
   //storage for swaps information
   Quack.api.swaps = new Map();
@@ -197,7 +196,7 @@ var Quack = (function(Quack, $, undefined) {
   //accept call
   Quack.api.accept = function(secret, recipientRS, finishHeight, assets, triggerHash, callback) {
 
-    var rest = finishHeight - Quack.currentBlock;
+    var rest = finishHeight - Quack.api.currentBlock;
     var deadline = rest / 2;
 
     if (deadline < 3) {
@@ -306,7 +305,9 @@ var Quack = (function(Quack, $, undefined) {
     $.post(Quack.constants.nxtApiUrl, {
       "requestType": "getBlockchainTransactions",
       "account": account,
-      "timestamp": timestamp
+      "timestamp": timestamp,
+      "phasedOnly": "true",
+      "withMessage": "true"
       },
 
       function(result) {
@@ -341,22 +342,6 @@ var Quack = (function(Quack, $, undefined) {
             //got a quack message
             console.log("quack message id: " + tx.transaction);
 
-            //process trigger message
-            if(jsonMessage.trigger == 1) {
-              var fullHash = tx.fullHash;
-              if(!fullHash) continue;
-
-              //if trigger transaction found - close swap session for it
-              var swapInfo = lookup.get(fullHash);
-              if (!swapInfo) swapInfo = {};
-              swapInfo.assetsA = new Array();
-              swapInfo.assetsB = new Array();
-              swapInfo.gotTrigger = true;
-              lookup.set(fullHash, swapInfo);
-              console.log("finalized quack session: " + fullHash);
-              continue;
-            }
-
             //for each phased transaction in txs check it's linkedFullHash and finishHeight
             var linkedhashes = attach.phasingLinkedFullHashes;
             if(!linkedhashes) continue;
@@ -384,45 +369,96 @@ var Quack = (function(Quack, $, undefined) {
               swapInfo.assetsA = new Array();
               swapInfo.assetsB = new Array();
               swapInfo.minFinishHeight = finishHeight;
+              swapInfo.minFinishHeightA = finishHeight;
+              swapInfo.minFinishHeightB = finishHeight;
+              swapInfo.minConfirmationsA = tx.confirmations;
+              swapInfo.minConfirmationsB = tx.confirmations;
             }
 
             if(finishHeight < swapInfo.minFinishHeight) swapInfo.minFinishHeight = finishHeight;
-
-            //check if it is payment
-            if(txType == 0 && txSubtype == 0) {
-              var assetInfo = {"id": 1, "type": "NXT", "QNT": tx.amountNQT, "tx": tx};
-              if(account == txSender) {
-                swapInfo.assetsA.push(assetInfo);
-              } else {
-                swapInfo.assetsB.push(assetInfo);
-              }
-            }
-            //check if it is asset transfer
-            else if (txType == 2 && txSubtype == 1) {
-              var assetInfo = {"id": attach.asset, "type": "A", "QNT": attach.quantityQNT, "tx": tx};
-              if(account == txSender) {
-                swapInfo.assetsA.push(assetInfo);
-              } else {
-                swapInfo.assetsB.push(assetInfo);
-              }
-            }
-            //check if it is currency transfer
-            else if (txType == 5 && txSubtype == 3) {
-              var assetInfo = {"id": attach.currency, "type": "M", "QNT": attach.units, "tx": tx};
-              if(account == txSender) {
-                swapInfo.assetsA.push(assetInfo);
-              } else {
-                swapInfo.assetsB.push(assetInfo);
-              }
-            }
-
-            lookup.set(hashdata, swapInfo);
 
             //check for swap information available
             var triggerBytes = jsonMessage.triggerBytes;
             if(triggerBytes) {
               triggerDataTxs.push({"tx": tx, "hashdata": hashdata, "message": jsonMessage});
             }
+
+            lookup.set(hashdata, swapInfo);
+
+            $.ajax({
+              url: Quack.constants.nxtApiUrl,
+              dataType: "json",
+              type: "POST",
+              context:{"tx": tx},
+              data: {
+                "requestType": "getPhasingPoll",
+                "transaction": tx.transaction,
+                "countVotes": "true"
+              }
+            }).done(function (phasingResult) {
+              var votes = phasingResult.result;
+              var quorum = phasingResult.quorum;
+
+              if(phasingResult.transaction) {
+                var txitem = this.tx;
+                var attachItem = txitem.attachment;
+                var hashitem = attachItem.phasingLinkedFullHashes[0];
+                var finishHeightItem = attachItem.phasingFinishHeight;
+                var swapInfo = lookup.get(hashitem);
+                txitem.votes = votes;
+                txitem.quorum = quorum;
+
+                //check if it is payment
+                if(txitem.type == 0 && txitem.subtype == 0) {
+                  var assetInfo = {"id": 1, "type": "NXT", "QNT": txitem.amountNQT, "tx": txitem};
+                  if(account == txitem.senderRS) {
+                    swapInfo.assetsA.push(assetInfo);
+                  } else {
+                    swapInfo.assetsB.push(assetInfo);
+                  }
+                }
+                //check if it is asset transfer
+                else if (txitem.type == 2 && txitem.subtype == 1) {
+                  var assetInfo = {"id": attachItem.asset, "type": "A", "QNT": attachItem.quantityQNT, "tx": txitem};
+                  if(account == txitem.senderRS) {
+                    swapInfo.assetsA.push(assetInfo);
+                  } else {
+                    swapInfo.assetsB.push(assetInfo);
+                  }
+                }
+                //check if it is currency transfer
+                else if (txitem.type == 5 && txitem.subtype == 3) {
+                  var assetInfo = {"id": attachItem.currency, "type": "M", "QNT": attachItem.units, "tx": txitem};
+                  if(account == txitem.senderRS) {
+                    swapInfo.assetsA.push(assetInfo);
+                  } else {
+                    swapInfo.assetsB.push(assetInfo);
+                  }
+                } else {
+                  Quack.utils.errored(callback, phasingResult);
+                  return;
+                }
+
+                if(account == txitem.senderRS) {
+                  if(finishHeightItem < swapInfo.minFinishHeightA) swapInfo.minFinishHeightA = finishHeightItem;
+                  if(txitem.confirmations < swapInfo.minConfirmationsA) swapInfo.minConfirmationsA = txitem.confirmations;
+                } else {
+                  if(finishHeightItem < swapInfo.minFinishHeightB) swapInfo.minFinishHeightB = finishHeightItem;
+                  if(txitem.confirmations < swapInfo.minConfirmationsB) swapInfo.minConfirmationsB = txitem.confirmations;
+                }
+
+                if(votes && quorum && votes == quorum) {
+                  swapInfo.gotTrigger = true;
+                }
+
+                lookup.set(hashitem, swapInfo);
+              } else {
+                Quack.utils.errored(callback, phasingResult);
+              }
+
+            }).fail(function () {
+              Quack.utils.errored(callback, phasingResult);
+            });
           }
 
           counter.maxcount = triggerDataTxs.length;

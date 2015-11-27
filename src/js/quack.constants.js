@@ -5,7 +5,7 @@ var Quack = (function(Quack, $, undefined) {
   Quack.constants.isPlugin = false;
   Quack.constants.isTestnet = true;
   ///TODO: broadcast = true
-  Quack.constants.broadcast = false;
+  Quack.constants.broadcast = true;
   Quack.constants.nxtApiUrl = "http://localhost:7876/nxt";
   
   if(Quack.constants.isTestnet)
