@@ -32,6 +32,8 @@
         <form style="text-align:center" autocomplete="off">
           <label for="quackMainAccount" data-i18n="account">My Account</label>
           <input type="text" name="account" class="form-control" placeholder="My Account" data-i18n="[placeholder]my_account" id="quackMainAccount" />
+
+          
         </form>
       </div>
     </div>
@@ -40,16 +42,25 @@
       <button type="button" id="quackCreateButton" class="btn btn-success" data-toggle="modal" data-target="#quackCreateModal">Create</button>
       <button type="button" id="quackScanButton" class="btn btn-success" onclick="quackScan();">Scan</button>
     </div>
+
+    <div class="row" style="text-align:center">
+      <h3>
+        <span style="text-align:right" data-i18n="quack_height">Current height: </span>
+        <span style="text-align:right" id="quackCurrentHeight">0</span>
+      </h3>
+    </div>
   </section>
 
   <div id="quackHistoryPage" class="page">
-    <section class="content-header" style="text-align:center"><h2 data-i18n="quack_history">Quack History</h2></section>
+    <section class="content-header" style="text-align:center">
+      <h2 data-i18n="quack_history">Quack History</h2>
+    </section>
     <section class="content">
       <div class="data-container">
         <table class="table table-striped" id="quackHistoryTable">
           <thead>
             <tr>
-              <th data-i18n="date">Finish Height</th>
+              <th data-i18n="height">Finish Height</th>
               <th data-i18n="recipient">Recipient</th>
               <th data-i18n="sender">Sender</th>
               <th data-i18n="details">Details</th>
@@ -232,6 +243,67 @@
     </div>
   </div>
 
+  <!-- Quack Details modal -->
+  <div id="quackDetailsModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Quack Details</h4>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="quackDetailsForm" autocomplete="off">
+            <div class="callout callout-danger error_message" style="display:none"></div>
+            <section class="content-header" style="text-align:center"><h3 data-i18n="send_side">Send</h3></section>
+            <section class="content">
+              <div class="data-container">
+                <table class="table table-striped" id="quackSendAssetsTable">
+                  <thead>
+                    <tr>
+                      <th data-i18n="height">Finish Height</th>
+                      <th data-i18n="asset">Asset</th>
+                      <th data-i18n="type">Type</th>
+                      <th data-i18n="asset">Quantity</th>
+                      <th data-i18n="confirmations">Confirmations</th>
+                      <th data-i18n="status">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="content-header" style="text-align:center"><h3 data-i18n="receive_side">Receive</h3></section>
+            <section class="content">
+              <div class="data-container">
+                <table class="table table-striped" id="quackReceiveAssetsTable">
+                  <thead>
+                    <tr>
+                      <th data-i18n="height">Finish Height</th>
+                      <th data-i18n="asset">Asset</th>
+                      <th data-i18n="type">Type</th>
+                      <th data-i18n="asset">Quantity</th>
+                      <th data-i18n="confirmations">Confirmations</th>
+                      <th data-i18n="status">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </form>
+        </div>
+        <div class="modal-footer" style="margin-top:0;">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- js placed at the end of the document so the pages load faster -->
   <script src="js/jquery-1.11.1.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
@@ -324,6 +396,78 @@
         $("#quackCreateExpectAssetGroup").hide();
         $("#quackCreateExpectCurrencyGroup").show();
       }
+    });
+
+    $("#quackDetailsModal").on("show.bs.modal", function () {
+
+      var modal = $("#quackDetailsModal");      
+      var key = modal.attr("extra");
+      var swap = Quack.api.swaps.get(key);
+      var rows = "";
+
+      var allAssets = new Array();
+      for(i = 0; i < swap.assets.length; i++) {
+        var asset = swap.assets[i];
+        asset.reftype = "assets";
+        asset.quantity = asset.QNT;
+        allAssets.push(asset);
+      }
+      for(i = 0; i < swap.expectedAssets.length; i++) {
+        var asset = swap.expectedAssets[i];
+        asset.reftype = "expectedAssets";
+        asset.quantity = asset.QNT;
+        allAssets.push(asset);
+      }
+
+      Quack.utils.updateQuantity(allAssets, function(assetsState) {
+        if(assetsState.ret == "ok") {
+
+          var assetsWithQNT = new Array();
+          var expectedAssetsWithQNT = new Array();
+          for(i = 0; i < assetsState.state.length; i++) {
+            if(assetsState.state[i].decimals < 0) {
+              continue;
+            }
+            var asset = assetsState.state[i];
+            if(asset.reftype == "assets") {
+              assetsWithQNT.push(asset);
+            } else if (asset.reftype == "expectedAssets") {
+              expectedAssetsWithQNT.push(asset);
+            }
+          }
+
+          var status = "Unknown";
+          var confirmations = 0;
+          for(i = 0; i < assetsWithQNT; i++) {
+            rows +=
+              "<tr><td>" + asset.tx.finishHeight + "</td>" +
+              "<td>" + asset.id + "</td>" +
+              "<td>" + asset.type + "</td>" +
+              "<td>" + asset.quantity + "</td>" +
+              "<td>" + asset.tx.confirmations + "</td>" +
+              "<td>" + status + "</td>" +
+              "</tr>";
+          }
+
+          var el = $("#quackSendAssetsTable");
+          el.find("tbody").empty().append(rows);
+
+          rows = "";
+          for(i = 0; i < expectedAssetsWithQNT; i++) {
+            rows +=
+              "<tr><td>" + asset.tx.finishHeight + "</td>" +
+              "<td>" + asset.id + "</td>" +
+              "<td>" + asset.type + "</td>" +
+              "<td>" + asset.quantity + "</td>" +
+              "<td>" + asset.tx.confirmations + "</td>" +
+              "<td>" + status + "</td>" +
+              "</tr>";
+          }
+
+          var el = $("#quackReceiveAssetsTable");
+          el.find("tbody").empty().append(rows);
+        }
+      });
     });
 
     function pageLoading() {
@@ -637,6 +781,7 @@
           var currentBlock = status.numberOfBlocks;
 
           if(currentBlock) {
+            $("#quackCurrentHeight").html(currentBlock);
             Quack.api.currentBlock = currentBlock;
             Quack.api.scan(account, timelimit, function(result) {
 
@@ -804,8 +949,8 @@
 
     function quackSwapDetails(btn) {
       var key = btn.getAttribute("extra");
-      var swap = Quack.api.swaps.get(key);
-      console.log("details for " + swap.sender);
+      $("#quackDetailsModal").attr("extra", key);
+      $("#quackDetailsModal").modal("show");
     }
 
     function quackSwapTrigger(btn) {

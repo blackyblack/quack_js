@@ -1,6 +1,5 @@
 - details modal
 - details in accept and finalize
-- current height on the main screen
 - add fee calculation
 - add optional finish height on Quack Create
 - add optional private message on Quack Create

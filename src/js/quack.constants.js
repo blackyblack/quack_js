@@ -2,6 +2,7 @@ var Quack = (function(Quack, $, undefined) {
   //Quack constants
   Quack.constants = {};
 
+  Quack.constants.version = "1.0";
   Quack.constants.isPlugin = false;
   Quack.constants.isTestnet = true;
   ///TODO: broadcast = true
