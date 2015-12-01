@@ -178,6 +178,113 @@ var Quack = (function(Quack, $, undefined) {
     });
   }
 
+  //convert amountQNT to user amounts
+  Quack.utils.parseQuantity = function(assets, callback) {
+    
+    var assetsSet = new Map();
+
+    for(i = 0; i < assets.length; i++) {
+      var asset = assets[i];
+      var assetId = "NXT";
+      var assetType = asset.type;
+      if(assetType == "A") {
+        assetId = "a:" + asset.id;
+      } else if (assetType == "M") {
+        assetId = "m:" + asset.id;
+      }
+      assetsSet.set(assetId, 1);
+    }
+
+    var allAssets = new Array();
+
+    for (var key of assetsSet.keys()) {
+      var asset = {};
+      var sub = key.substring(0, 2);
+      if(key == "NXT") {
+        asset.id = "1";
+        asset.type = "NXT"
+      }
+
+      if(sub == "a:") {
+        asset.id = key.substring(2);
+        asset.type = "A"
+      } else if (sub == "m:") {
+        asset.id = key.substring(2);
+        asset.type = "M"
+      }
+          
+      allAssets.push(asset);
+    }  
+
+    //allAssets now contains only unique assetIds
+
+    Quack.utils.getDecimals(allAssets, function(assetsState) {
+      if(assetsState.ret == "ok") {
+
+        for(i = 0; i < assetsState.state.length; i++) {
+          var assetDecimalInfo = assetsState.state[i];
+          var assetId = assetDecimalInfo.id;
+          var decimals = assetDecimalInfo.decimals;
+          var assetType = assetDecimalInfo.type;
+
+          for(k = 0; k < assets.length; k++) {
+            if(assetType == "NXT" && assets[k].type == "NXT") {
+              assets[k].decimals = decimals;
+              if(decimals >= 0) {
+                var price = new BigInteger(String(assets[k].QNT));
+                assets[k].QNT = price.divide(new BigInteger("" + Math.pow(10, decimals))).toString();
+              }
+              continue;
+            }
+
+            if(assets[k].id != assetId) continue;
+            if(assets[k].type != assetType) continue;
+            assets[k].decimals = decimals;
+            if(decimals >= 0) {
+              var price = new BigInteger(String(assets[k].QNT));
+              assets[k].QNT = price.divide(new BigInteger("" + Math.pow(10, decimals))).toString();
+            }
+          }
+        }
+
+        callback({"ret":"ok", "state":assets});
+      } else {
+        callback(assetsState);
+      }
+    });
+  }
+
+  //convert amountQNT to user amounts
+  Quack.utils.scanHelper = function(account, timelimit, callback) {
+
+    Quack.api.scan(account, timelimit, function(result) {
+      if(result.ret == "ok") {
+
+        var swaps = result.state.lookup;
+
+        for (var key of swaps.keys()) {
+          var swap = swaps.get(key);
+
+          var assetsA = swap.assetsA;
+          var assetsB = swap.assetsB;
+
+          if(account == swap.recipient) {
+            assetsA = swap.assetsB;
+            assetsB = swap.assetsA;
+          }
+
+          swap.assetsA = assetsA;
+          swap.assetsB = assetsB;
+
+          result.state.lookup.set(key, swap);
+        }
+        callback(result);
+      } else {
+        callback(result);
+      }
+    });      
+  }
+
   //private functions
 
   function queueReadyCallback(queue, length, callback) {

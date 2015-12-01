@@ -419,9 +419,8 @@
         allAssets.push(asset);
       }
 
-      Quack.utils.updateQuantity(allAssets, function(assetsState) {
+      Quack.utils.parseQuantity(allAssets, function(assetsState) {
         if(assetsState.ret == "ok") {
-
           var assetsWithQNT = new Array();
           var expectedAssetsWithQNT = new Array();
           for(i = 0; i < assetsState.state.length; i++) {
@@ -435,35 +434,52 @@
               expectedAssetsWithQNT.push(asset);
             }
           }
-
           var status = "Unknown";
           var confirmations = 0;
-          for(i = 0; i < assetsWithQNT; i++) {
+
+          ///TODO: get status and confirmations from assetsA/assetsB
+
+          for(i = 0; i < assetsWithQNT.length; i++) {
+            var asset = assetsWithQNT[i];
+
+            var assetType = asset.type;
+            if (assetType == "A") assetType = "Asset";
+            else if (assetType == "M") assetType = "Currency";
+
+            var assetId = asset.id;
+            if (asset.type == "NXT") assetId = "undefined";
+
             rows +=
-              "<tr><td>" + asset.tx.finishHeight + "</td>" +
-              "<td>" + asset.id + "</td>" +
-              "<td>" + asset.type + "</td>" +
-              "<td>" + asset.quantity + "</td>" +
-              "<td>" + asset.tx.confirmations + "</td>" +
+              "<tr><td>" + /*asset.tx.finishHeight*/0 + "</td>" +
+              "<td>" + assetId + "</td>" +
+              "<td>" + assetType + "</td>" +
+              "<td>" + asset.QNT + "</td>" +
+              "<td>" + /*asset.tx.confirmations*/0 + "</td>" +
               "<td>" + status + "</td>" +
               "</tr>";
           }
-
           var el = $("#quackSendAssetsTable");
           el.find("tbody").empty().append(rows);
-
           rows = "";
-          for(i = 0; i < expectedAssetsWithQNT; i++) {
+          for(i = 0; i < expectedAssetsWithQNT.length; i++) {
+            var asset = expectedAssetsWithQNT[i];
+
+            var assetType = asset.type;
+            if (assetType == "A") assetType = "Asset";
+            else if (assetType == "M") assetType = "Currency";
+
+            var assetId = asset.id;
+            if (asset.type == "NXT") assetId = "undefined";
+
             rows +=
-              "<tr><td>" + asset.tx.finishHeight + "</td>" +
-              "<td>" + asset.id + "</td>" +
-              "<td>" + asset.type + "</td>" +
-              "<td>" + asset.quantity + "</td>" +
-              "<td>" + asset.tx.confirmations + "</td>" +
+              "<tr><td>" + /*asset.tx.finishHeight*/0 + "</td>" +
+              "<td>" + assetId + "</td>" +
+              "<td>" + assetType + "</td>" +
+              "<td>" + asset.QNT + "</td>" +
+              "<td>" + /*asset.tx.confirmations*/0 + "</td>" +
               "<td>" + status + "</td>" +
               "</tr>";
           }
-
           var el = $("#quackReceiveAssetsTable");
           el.find("tbody").empty().append(rows);
         }
@@ -783,7 +799,7 @@
           if(currentBlock) {
             $("#quackCurrentHeight").html(currentBlock);
             Quack.api.currentBlock = currentBlock;
-            Quack.api.scan(account, timelimit, function(result) {
+            Quack.utils.scanHelper(account, timelimit, function(result) {
 
               if(result.ret == "ok") {
 
@@ -857,10 +873,6 @@
 
       var assetsA = swap.assetsA;
       var assetsB = swap.assetsB;
-      if(account == swap.recipient) {
-        assetsA = swap.assetsB;
-        assetsB = swap.assetsA;
-      }
 
       //check that assetsA is equal to announcedAssets (PendingA)
       if (swap.assets) {
