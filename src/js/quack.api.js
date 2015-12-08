@@ -13,7 +13,7 @@ var Quack = (function(Quack, $, undefined) {
   Quack.api.init = function(secret, recipientRS, finishHeight, assets, expectedAssets, privateMessage, callback) {
 
     var rest = finishHeight - Quack.api.currentBlock;
-    var deadline = rest / 2;
+    var deadline = Math.floor(rest / 2);
 
     if (deadline < 3) {
       deadline = 3;
@@ -21,7 +21,6 @@ var Quack = (function(Quack, $, undefined) {
 
     if ((deadline + 1) > rest)
     {
-      console.log("Too short period until timeout");
       callback({"ret": "error", "result": "Too short period until timeout"});
       return;
     }
@@ -136,13 +135,13 @@ var Quack = (function(Quack, $, undefined) {
             },
             "json"
           ).fail(function() {
-            Quack.utils.txqueued("error", txids, assets.length, callback);
+            Quack.utils.txqueued({"error": "timeout"}, txids, assets.length, callback);
           });
 
           count++;
         }
       } 
-      // if (result.fullHash)
+      // if (!result.fullHash)
       else {
         callback({"ret": "error", "result": result});
       }
@@ -175,7 +174,7 @@ var Quack = (function(Quack, $, undefined) {
               if (txid) {
 
                 console.log("Trigger txid: " + txid);
-                callback({"ret": "ok", "txid": txid});
+                callback({"ret": "ok", "result": txid});
                 
               } else {
                 Quack.utils.errored(callback, result2);
@@ -197,7 +196,7 @@ var Quack = (function(Quack, $, undefined) {
   Quack.api.accept = function(secret, recipientRS, finishHeight, assets, triggerHash, callback) {
 
     var rest = finishHeight - Quack.api.currentBlock;
-    var deadline = rest / 2;
+    var deadline = Math.floor(rest / 2);
 
     if (deadline < 3) {
       deadline = 3;
@@ -285,7 +284,7 @@ var Quack = (function(Quack, $, undefined) {
         },
         "json"
       ).fail(function() {
-        Quack.utils.txqueued("error", txids, assets.length, callback);
+        Quack.utils.txqueued({"error": "timeout"}, txids, assets.length, callback);
       });
     }
   }

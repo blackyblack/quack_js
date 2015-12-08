@@ -8,7 +8,7 @@ var Quack = (function(Quack, $, undefined) {
   }
 
   Quack.utils.failed = function(callback) {
-    callback({"ret": "error", "result": "NRS not found"});
+    callback({"ret": "error", "result": {"error": "timeout"}});
   }
 
   Quack.utils.errored = function(callback, result) {
@@ -21,10 +21,10 @@ var Quack = (function(Quack, $, undefined) {
     var txid = tx.transaction;
     if (txid) {
       console.log("Queued transaction: " + txid);
-      queue.push("" + txid);
+      queue.push({"ret": "ok", "result": txid});
     } else {
       console.log("error from NRS: " + tx);
-      queue.push("0");
+      queue.push({"ret": "error", "result": tx});
     }
 
     queueReadyCallback(queue, maxlength, callback);
@@ -102,6 +102,84 @@ var Quack = (function(Quack, $, undefined) {
     }
   }
 
+  Quack.utils.convertToQNT = function (quantity, decimals) {
+    quantity = String(quantity);
+
+    var parts = quantity.split(".");
+
+    var qnt = parts[0];
+
+    //no fractional part
+    var i;
+    if (parts.length == 1) {
+      if (decimals) {
+        for (i = 0; i < decimals; i++) {
+          qnt += "0";
+        }
+      }
+    } else if (parts.length == 2) {
+      var fraction = parts[1];
+      if (fraction.length > decimals) {
+        throw $.t("error_fraction_decimals", {
+          "decimals": decimals
+        });
+      } else if (fraction.length < decimals) {
+        for (i = fraction.length; i < decimals; i++) {
+          fraction += "0";
+        }
+      }
+      qnt += fraction;
+    } else {
+      throw $.t("error_invalid_input");
+    }
+
+    //in case there's a comma or something else in there.. at this point there should only be numbers
+    if (!/^\d+$/.test(qnt)) {
+      throw $.t("error_invalid_input_numbers");
+    }
+    try {
+      if (parseInt(qnt) === 0) {
+        return "0";
+      }
+    } catch (e) {
+    }
+
+    //remove leading zeroes
+    return qnt.replace(/^0+/, "");
+  }
+
+  Quack.utils.convertFromQNT = function (quantity, decimals) {
+    var negative = "";
+    var mantissa = "";
+
+    if (typeof quantity != "object") {
+      quantity = new BigInteger(String(quantity));
+    }
+
+    if (quantity.compareTo(BigInteger.ZERO) < 0) {
+      quantity = quantity.abs();
+      negative = "-";
+    }
+
+    var divider = new BigInteger("" + Math.pow(10, decimals));
+
+    var fractionalPart = quantity.mod(divider).toString();
+    quantity = quantity.divide(divider);
+
+    if (fractionalPart && fractionalPart != "0") {
+      mantissa = ".";
+
+      for (var i = fractionalPart.length; i < decimals; i++) {
+        mantissa += "0";
+      }
+
+      mantissa += fractionalPart.replace(/0+$/, "");
+    }
+
+    quantity = quantity.toString();
+    return negative + quantity + mantissa;
+  }
+
   //convert user amounts to amountQNT
   Quack.utils.updateQuantity = function(assets, callback) {
     
@@ -155,8 +233,8 @@ var Quack = (function(Quack, $, undefined) {
             if(assetType == "NXT" && assets[k].type == "NXT") {
               assets[k].decimals = decimals;
               if(decimals >= 0) {
-                var price = new BigInteger(String(assets[k].QNT));
-                assets[k].QNT = price.multiply(new BigInteger("" + Math.pow(10, decimals))).toString();
+                var price = Quack.utils.convertToQNT(assets[k].QNTin, decimals);
+                assets[k].QNTout = price;
               }
               continue;
             }
@@ -165,8 +243,8 @@ var Quack = (function(Quack, $, undefined) {
             if(assets[k].type != assetType) continue;
             assets[k].decimals = decimals;
             if(decimals >= 0) {
-              var price = new BigInteger(String(assets[k].QNT));
-              assets[k].QNT = price.multiply(new BigInteger("" + Math.pow(10, decimals))).toString();
+              var price = Quack.utils.convertToQNT(assets[k].QNTin, decimals);
+              assets[k].QNTout = price;
             }
           }
         }
@@ -231,8 +309,8 @@ var Quack = (function(Quack, $, undefined) {
             if(assetType == "NXT" && assets[k].type == "NXT") {
               assets[k].decimals = decimals;
               if(decimals >= 0) {
-                var price = new BigInteger(String(assets[k].QNT));
-                assets[k].QNT = price.divide(new BigInteger("" + Math.pow(10, decimals))).toString();
+                var price = new BigInteger(String(assets[k].QNTin));
+                assets[k].QNTout = Quack.utils.convertFromQNT(price, decimals);
               }
               continue;
             }
@@ -241,8 +319,8 @@ var Quack = (function(Quack, $, undefined) {
             if(assets[k].type != assetType) continue;
             assets[k].decimals = decimals;
             if(decimals >= 0) {
-              var price = new BigInteger(String(assets[k].QNT));
-              assets[k].QNT = price.divide(new BigInteger("" + Math.pow(10, decimals))).toString();
+              var price = new BigInteger(String(assets[k].QNTin));
+              assets[k].QNTout = Quack.utils.convertFromQNT(price, decimals);
             }
           }
         }

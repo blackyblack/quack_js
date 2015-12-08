@@ -1,5 +1,4 @@
-- details modal
-- details in accept and finalize
+- update Quack details on every new block
 - add fee calculation
 - add optional finish height on Quack Create
 - add optional private message on Quack Create
